@@ -549,7 +549,7 @@
   <div id="view-notes" hidden></div>
   <div id="view-shop" hidden></div>
 
-  <p class="footer">v1.7.2 · 2026-11-01 · 非医疗建议，仅供日常参考</p>
+  <p class="footer">v1.7.4 · 2026-11-01 · 非医疗建议，仅供日常参考</p>
 
   <div class="sticky">
     <button type="button" class="b" id="btnCopy">复制采购清单</button>
@@ -591,7 +591,7 @@
   const ALL_SLOTS = LUNCH_SLOTS.concat(DINNER_SLOTS);
   const ROLE_ORDER = ["主食", "荤", "素"];
 
-  // Component dish library — roles: 主食 / 荤 / 素 · v1.7 家常下饭向
+  // Component dish library — roles: 主食 / 荤 / 素 · v1.7.4 家常下饭向
   const DISHES = [
     // —— 主食（白米饭默认；少量清淡保底 + 下饭炒饭/面/包）
     { role: "主食", name: "白米饭", ings: ["大米"], note: "默认主食", nausea: true, stages: ["早","中","晚"] },
@@ -612,10 +612,30 @@
     { role: "主食", name: "杂粮饭", ings: ["杂粮米"], note: "膳食纤维", nausea: false, stages: ["中","晚"] },
 
     // —— 荤/蛋白（全熟下饭；早孕偏清淡少辣，中晚更全）
+    { role: "荤", name: "芦笋炒虾仁", ings: ["芦笋", "虾仁"], note: "虾全熟·清淡", nausea: true, stages: ["早","中","晚"] },
+    { role: "荤", name: "芹菜炒牛肉", ings: ["芹菜", "瘦牛肉"], note: "快炒全熟", nausea: false, stages: ["中","晚"] },
+    { role: "荤", name: "辣椒炒牛肉", ings: ["辣椒", "瘦牛肉"], note: "微辣可去辣椒·肉全熟", nausea: false, stages: ["中","晚"] },
+    { role: "荤", name: "胡萝卜炒肉丝", ings: ["胡萝卜", "猪肉丝"], note: "家常少油", nausea: false, stages: ["早","中","晚"] },
+    { role: "荤", name: "葱香鸡腿", ings: ["鸡腿", "葱", "姜"], note: "煎或烤·全熟", nausea: false, stages: ["早","中","晚"] },
+    { role: "荤", name: "黄瓜虾仁胡萝卜鸡蛋", ings: ["黄瓜", "虾仁", "胡萝卜", "鸡蛋"], note: "蛋全熟·虾全熟", nausea: true, stages: ["早","中","晚"] },
+    { role: "荤", name: "彩椒炒牛里脊", ings: ["彩椒", "牛里脊"], note: "滑炒全熟", nausea: false, stages: ["中","晚"] },
+    { role: "荤", name: "香煎三文鱼", ings: ["三文鱼", "柠檬", "黑胡椒"], note: "鱼全熟·勿半生", nausea: false, stages: ["中","晚"] },
+    { role: "荤", name: "南瓜蒸排骨", ings: ["南瓜", "排骨", "姜"], note: "蒸透·排骨全熟", nausea: false, stages: ["中","晚"] },
+    { role: "荤", name: "西红柿牛腩", ings: ["牛腩", "番茄", "土豆"], note: "炖软烂·同番茄牛腩", nausea: false, stages: ["中","晚"] },
+    { role: "荤", name: "呛炒鲍鱼", ings: ["鲍鱼", "葱", "姜"], note: "鲍鱼全熟", nausea: false, stages: ["中","晚"] },
+    { role: "荤", name: "清蒸葱油鸡", ings: ["鸡腿", "葱", "姜"], note: "蒸透全熟·清淡", nausea: true, stages: ["早","中","晚"] },
+    { role: "荤", name: "炒大虾", ings: ["虾", "葱", "姜"], note: "虾全熟", nausea: false, stages: ["早","中","晚"] },
+    { role: "荤", name: "豆角炒肉丝", ings: ["豆角", "猪肉丝"], note: "豆角煸透·肉全熟", nausea: false, stages: ["中","晚"] },
+    { role: "荤", name: "蒜苔炒牛肉", ings: ["蒜苔", "瘦牛肉"], note: "快炒全熟", nausea: false, stages: ["中","晚"] },
+    { role: "荤", name: "花甲粉丝", ings: ["花甲", "粉丝", "蒜"], note: "花甲鲜活全熟", nausea: false, stages: ["中","晚"] },
+    { role: "荤", name: "清蒸鲈鱼", ings: ["鲈鱼", "姜", "葱"], note: "鱼全熟", nausea: false, stages: ["早","中","晚"] },
+    { role: "荤", name: "杏鲍菇牛肉粒", ings: ["杏鲍菇", "瘦牛肉"], note: "滑炒全熟", nausea: false, stages: ["中","晚"] },
+    { role: "荤", name: "黑胡椒牛肉炒大虾", ings: ["瘦牛肉", "虾", "黑胡椒", "洋葱"], note: "微辣可减黑胡椒·虾全熟·肉全熟", nausea: false, stages: ["中","晚"] },
+    { role: "荤", name: "豆干炒牛肉", ings: ["豆干", "瘦牛肉"], note: "家常·肉全熟", nausea: false, stages: ["中","晚"] },
+    { role: "荤", name: "葱油鱼片", ings: ["鱼片", "葱", "姜"], note: "鱼全熟", nausea: true, stages: ["早","中","晚"] },
     { role: "荤", name: "番茄炒蛋", ings: ["鸡蛋", "番茄"], note: "家常·孕吐友好", nausea: true, stages: ["早","中","晚"] },
     { role: "荤", name: "香菇滑鸡", ings: ["鸡腿肉", "香菇"], note: "滑嫩全熟", nausea: false, stages: ["早","中","晚"] },
     { role: "荤", name: "土豆炖鸡", ings: ["鸡腿", "土豆", "胡萝卜"], note: "软烂下饭", nausea: false, stages: ["早","中","晚"] },
-    { role: "荤", name: "清蒸鲈鱼", ings: ["鲈鱼", "姜", "葱"], note: "鱼全熟", nausea: false, stages: ["早","中","晚"] },
     { role: "荤", name: "洋葱炒肉", ings: ["洋葱", "瘦猪肉"], note: "家常少油", nausea: false, stages: ["早","中","晚"] },
     { role: "荤", name: "锅塌豆腐", ings: ["豆腐", "鸡蛋"], note: "外软里嫩·蛋全熟", nausea: true, stages: ["早","中","晚"] },
     { role: "荤", name: "家常豆腐", ings: ["豆腐", "瘦猪肉"], note: "少油下饭", nausea: true, stages: ["早","中","晚"] },
@@ -638,6 +658,15 @@
     { role: "荤", name: "青椒肉丝", ings: ["青椒", "瘦猪肉"], note: "家常", nausea: false, stages: ["中","晚"] },
 
     // —— 素（少清炒白水菜；下饭家常素菜为主）
+    { role: "素", name: "炒萝卜丝", ings: ["白萝卜", "葱"], note: "清爽少油", nausea: true, stages: ["早","中","晚"] },
+    { role: "素", name: "清炒冬瓜", ings: ["冬瓜", "蒜"], note: "清淡利尿", nausea: true, stages: ["早","中","晚"] },
+    { role: "素", name: "清炒莴笋丝", ings: ["莴笋", "蒜"], note: "脆嫩少油", nausea: true, stages: ["早","中","晚"] },
+    { role: "素", name: "西红柿炒西葫芦", ings: ["番茄", "西葫芦"], note: "家常清淡", nausea: true, stages: ["早","中","晚"] },
+    { role: "素", name: "酸辣土豆丝", ings: ["土豆", "醋", "干辣椒"], note: "微辣可去辣椒", nausea: false, stages: ["中","晚"] },
+    { role: "素", name: "豆皮炒奶白菜", ings: ["豆皮", "奶白菜"], note: "豆制品·少油", nausea: true, stages: ["早","中","晚"] },
+    { role: "素", name: "西红柿炒菜花", ings: ["番茄", "菜花"], note: "家常", nausea: false, stages: ["早","中","晚"] },
+    { role: "素", name: "莲藕荷兰豆", ings: ["莲藕", "荷兰豆"], note: "脆爽少油", nausea: false, stages: ["中","晚"] },
+    { role: "素", name: "芹菜辣椒炒香干", ings: ["芹菜", "辣椒", "香干"], note: "微辣可去辣椒·豆制品无肉", nausea: false, stages: ["中","晚"] },
     { role: "素", name: "蒜蓉西兰花", ings: ["西兰花", "蒜"], note: "少油", nausea: true, stages: ["早","中","晚"] },
     { role: "素", name: "醋溜白菜", ings: ["大白菜", "醋", "干辣椒"], note: "酸爽·早孕可去辣椒", nausea: true, stages: ["早","中","晚"] },
     { role: "素", name: "香菇油菜", ings: ["油菜", "香菇"], note: "家常", nausea: true, stages: ["早","中","晚"] },
@@ -653,7 +682,6 @@
     { role: "素", name: "蚝油杏鲍菇", ings: ["杏鲍菇", "蚝油"], note: "下饭", nausea: false, stages: ["中","晚"] },
     { role: "素", name: "烤茄子", ings: ["茄子", "蒜", "生抽"], note: "优于凉拌皮蛋", nausea: false, stages: ["中","晚"] },
     { role: "素", name: "蒜泥茄子", ings: ["茄子", "蒜"], note: "蒸或烤后拌", nausea: false, stages: ["中","晚"] },
-    { role: "素", name: "酸辣土豆丝", ings: ["土豆", "醋", "干辣椒"], note: "微辣可去辣椒", nausea: false, stages: ["中","晚"] },
     { role: "素", name: "玉米烙", ings: ["玉米粒", "鸡蛋", "淀粉"], note: "外脆里嫩·蛋全熟", nausea: false, stages: ["中","晚"] },
     { role: "素", name: "蚝油生菜", ings: ["生菜", "蚝油"], note: "快炒", nausea: false, stages: ["中","晚"] },
     { role: "素", name: "蒜蓉空心菜", ings: ["空心菜", "蒜"], note: "", nausea: false, stages: ["中","晚"] },
@@ -664,10 +692,10 @@
 
   const ING_GROUPS = {
     "主食": ["大米", "杂粮米", "小米", "燕麦", "面条", "河粉", "意面", "全麦面包", "全麦馒头", "馄饨", "饺子", "小笼包", "包子", "红薯", "紫薯", "玉米", "玉米面", "玉米粒", "苏打饼干", "南瓜", "土豆", "淀粉", "黄油", "咖喱块"],
-    "蛋白": ["鸡蛋", "蛋皮", "瘦猪肉", "猪肉丝", "牛肉末", "瘦牛肉", "黄牛肉", "牛腩", "排骨", "鸡胸肉", "鸡腿", "鸡腿肉", "鸡翅", "鲈鱼", "鳕鱼", "鱼片", "虾", "虾仁", "豆腐", "豆干", "豆浆", "巴氏牛奶", "原味酸奶", "花生"],
-    "蔬菜": ["菠菜", "青菜", "绿叶菜", "西兰花", "菜心", "黄瓜", "番茄", "胡萝卜", "豆芽", "香菇", "杏鲍菇", "木耳", "山药", "冬瓜", "芹菜", "莴笋", "生菜", "油麦菜", "油菜", "空心菜", "青椒", "包菜", "大白菜", "茄子", "四季豆", "豆角", "荷兰豆", "洋葱", "笋", "丝瓜", "紫菜", "粉丝", "姜", "蒜", "葱", "干辣椒"],
+    "蛋白": ["鸡蛋", "蛋皮", "瘦猪肉", "猪肉丝", "牛肉末", "瘦牛肉", "黄牛肉", "牛腩", "牛里脊", "排骨", "鸡胸肉", "鸡腿", "鸡腿肉", "鸡翅", "鲈鱼", "鳕鱼", "鱼片", "三文鱼", "虾", "虾仁", "鲍鱼", "花甲", "豆腐", "豆干", "豆皮", "香干", "豆浆", "巴氏牛奶", "原味酸奶", "花生"],
+    "蔬菜": ["菠菜", "青菜", "绿叶菜", "西兰花", "菜心", "黄瓜", "番茄", "胡萝卜", "豆芽", "香菇", "杏鲍菇", "木耳", "山药", "冬瓜", "芹菜", "莴笋", "生菜", "油麦菜", "油菜", "空心菜", "奶白菜", "青椒", "彩椒", "辣椒", "包菜", "大白菜", "茄子", "四季豆", "豆角", "荷兰豆", "洋葱", "笋", "丝瓜", "紫菜", "粉丝", "芦笋", "蒜苔", "西葫芦", "菜花", "莲藕", "白萝卜", "姜", "蒜", "葱", "干辣椒", "柠檬"],
     "水果奶蛋": ["香蕉", "苹果", "梨", "橙子", "猕猴桃", "葡萄干", "巴旦木", "核桃"],
-    "调味": ["生抽", "蚝油", "豆豉", "豆瓣酱", "甜面酱", "番茄酱", "照烧汁", "醋", "无糖可乐"]
+    "调味": ["生抽", "蚝油", "豆豉", "豆瓣酱", "甜面酱", "番茄酱", "照烧汁", "醋", "无糖可乐", "黑胡椒"]
   };
 
   function emptyPlan() {
@@ -679,7 +707,7 @@
   }
 
   function defaultState() {
-    return { days: 3, plans: Array.from({ length: 5 }, emptyPlan), showAll: false };
+    return { days: 3, plans: Array.from({ length: 5 }, emptyPlan), showAll: true };
   }
 
   function dishByName(name) {
@@ -728,7 +756,7 @@
     const base = defaultState();
     if (!raw || typeof raw !== "object") return base;
     const days = Math.min(5, Math.max(1, Number(raw.days) || 3));
-    return { days, plans: Array.from({ length: 5 }, emptyPlan), showAll: false };
+    return { days, plans: Array.from({ length: 5 }, emptyPlan), showAll: true };
   }
 
   function loadState() {
@@ -1369,7 +1397,7 @@
     });
     lines.push("【已选搭配】");
     chosen.forEach(c => lines.push(c));
-    lines.push("", "— 孕期自选食谱 v1.7");
+    lines.push("", "— 孕期自选食谱 v1.7.4");
     return lines.join("\n");
   }
 
