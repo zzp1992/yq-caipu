@@ -4,278 +4,1419 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="format-detection" content="telephone=no" />
 <title>孕期自选食谱</title>
 <style>
   :root {
-    --bg: #f7f4ee;
-    --card: #fff;
-    --ink: #1a1a1a;
-    --muted: #666;
-    --line: #e6e0d4;
-    --accent: #1e5bb8;
-    --gold: #c9a84c;
-    --ok: #2f6b3a;
+    --bg: #f6f2eb;
+    --card: #ffffff;
+    --ink: #1c1a17;
+    --muted: #6b6560;
+    --line: #e8e1d6;
+    --accent: #2a6f97;
+    --accent-soft: #e8f2f8;
+    --gold: #c9a227;
+    --gold-soft: #fff6df;
+    --ok: #3a7d4a;
+    --ok-soft: #e8f5ec;
+    --rose: #b85c6a;
+    --rose-soft: #fceef1;
+    --shadow: 0 1px 3px rgba(28,26,23,.06);
+    --radius: 14px;
+    --tap: 44px;
   }
-  * { box-sizing: border-box; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html {
+    height: 100%;
+    scrollbar-gutter: stable;
+    /* no overflow-x:hidden here — it breaks position:sticky for #day-jump / .tabs */
+  }
   body {
-    margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-    background: var(--bg); color: var(--ink); line-height: 1.45;
-    padding: 16px 14px 88px;
+    margin: 0;
+    min-height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+      "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.45;
+    padding: calc(14px + env(safe-area-inset-top)) 14px calc(96px + env(safe-area-inset-bottom));
+    max-width: 100%;
+    overscroll-behavior-x: none;
+    /* no overflow-x:hidden — ancestors with overflow≠visible disable sticky */
   }
-  h1 { font-size: 1.35rem; margin: 0 0 4px; }
-  .sub { color: var(--muted); font-size: 0.85rem; margin-bottom: 14px; }
-  .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  h1 {
+    font-size: 1.32rem;
+    margin: 0 0 2px;
+    letter-spacing: .02em;
+  }
+  .sub {
+    color: var(--muted);
+    font-size: 0.84rem;
+    margin: 0 0 10px;
+  }
+  .gestation {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  .tips {
+    background: var(--gold-soft);
+    border: 1px solid #ead7a0;
+    border-radius: 12px;
+    padding: 0;
+    font-size: 0.86rem;
+    color: #5c4a1e;
+    margin-bottom: 14px;
+  }
+  .tips > summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 10px 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: var(--tap);
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .tips > summary::-webkit-details-marker { display: none; }
+  .tips > summary::marker { content: ""; }
+  .tips-summary-main {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .tips-chevron {
+    display: inline-block;
+    transition: transform .15s ease;
+    font-weight: 700;
+  }
+  .tips[open] > summary .tips-chevron { transform: rotate(180deg); }
+  .tips-hint {
+    font-weight: 500;
+    font-size: 0.78rem;
+    color: #8a7340;
+    white-space: nowrap;
+  }
+  .tips[open] > summary .tips-hint { display: none; }
+  .tips-body {
+    padding: 0 12px 12px;
+    border-top: 1px solid #ead7a0;
+  }
+  .tips-stage {
+    margin: 10px 0 8px;
+    font-size: 0.84rem;
+    line-height: 1.5;
+  }
+  .tips-h {
+    margin: 10px 0 4px;
+    font-weight: 700;
+    font-size: 0.84rem;
+  }
+  .tips-body ul {
+    margin: 0 0 4px;
+    padding-left: 1.15em;
+  }
+  .tips-body li {
+    margin: 3px 0;
+    line-height: 1.45;
+  }
+  .tips-attr {
+    margin: 10px 0 0;
+    font-size: 0.76rem;
+    color: #8a7340;
+    line-height: 1.4;
+  }
+  .tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+    position: sticky;
+    top: env(safe-area-inset-top);
+    z-index: 5;
+    background: rgba(246,242,235,.92);
+    backdrop-filter: blur(8px);
+    padding: 6px 0;
+  }
   .tab {
-    border: 1px solid var(--line); background: var(--card); border-radius: 999px;
-    padding: 8px 14px; font-size: 0.92rem; cursor: pointer;
+    flex: 1;
+    min-height: var(--tap);
+    border: 1px solid var(--line);
+    background: var(--card);
+    border-radius: 999px;
+    padding: 10px 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    font-weight: 600;
   }
-  .tab.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .tab.on {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
   .card {
-    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
-    padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(0,0,0,.04);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
   }
-  .card h2 { font-size: 1.05rem; margin: 0 0 10px; }
-  label { display: block; font-size: 0.8rem; color: var(--muted); margin: 8px 0 4px; }
-  select, button.primary {
-    width: 100%; font-size: 1rem; padding: 10px 12px; border-radius: 10px;
-    border: 1px solid var(--line); background: #fff;
+  .card h2 {
+    font-size: 1.02rem;
+    margin: 0 0 10px;
   }
-  button.primary {
-    background: var(--accent); color: #fff; border: none; font-weight: 700;
-    margin-top: 10px; cursor: pointer;
+  .chiprow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
   }
-  button.ghost {
-    background: transparent; border: 1px solid var(--line); border-radius: 10px;
-    padding: 8px 12px; margin: 4px 4px 0 0; cursor: pointer; font-size: 0.9rem;
+  .chip {
+    min-height: var(--tap);
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    padding: 8px 14px;
+    font-size: 0.9rem;
+    background: #fff;
+    cursor: pointer;
+    font-weight: 600;
   }
-  .chiprow { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
-  .chip { border-radius: 999px; border: 1px solid var(--line); padding: 6px 10px; font-size: 0.85rem; background: #fff; cursor: pointer; }
-  .chip.on { background: #e8f0ff; border-color: var(--accent); color: var(--accent); }
-  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
-  th { color: var(--muted); font-weight: 600; font-size: 0.78rem; }
+  .chip.on {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .day-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .day-title {
+    font-weight: 700;
+    font-size: 1.05rem;
+  }
+  .day-jump {
+    display: block;
+    margin-bottom: 12px;
+    position: sticky;
+    top: calc(env(safe-area-inset-top) + var(--tabs-h, 56px));
+    z-index: 4;
+    background: rgba(246,242,235,.94);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding: 6px 0 8px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    /* sticky element itself must not use overflow-x:hidden on ancestors;
+       contain horizontal layout on the inner row only */
+  }
+  .day-jump[hidden] { display: none !important; }
+  .day-jump-inner {
+    display: flex;
+    gap: 6px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+  .day-jump-inner::-webkit-scrollbar { display: none; }
+  /* Sticky day-jump stays in-flow (no extra plan padding that would stack).
+     scroll-margin / scroll-padding keep anchors & jump targets clear of the bar. */
+  #view-plan {
+    padding-top: 0 !important; /* clear leftover filter-area padding */
+  }
+  #view-plan > .card,
+  #view-plan > [data-day-card] {
+    scroll-margin-top: calc(env(safe-area-inset-top) + var(--sticky-stack-h, 120px));
+  }
+  #day-jump-spacer {
+    display: block;
+    height: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .day-jump-btn {
+    flex: 1 1 0;
+    min-width: 0; /* allow shrink so 7 days fit without horizontal overflow */
+    min-height: var(--tap);
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: #fff;
+    font-weight: 700;
+    font-size: 0.82rem;
+    cursor: pointer;
+    padding: 10px 4px;
+    color: var(--ink);
+    white-space: nowrap;
+    box-sizing: border-box;
+  }
+  .day-jump-btn.on {
+    background: var(--gold-soft);
+    border-color: var(--gold);
+    color: #5c4a1e;
+    /* same border width as default — avoid flex row width shift */
+  }
+  .meal-block { margin-top: 12px; }
+  .meal-block-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: var(--ink);
+  }
+  .slot-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+  .slot-row:last-child { margin-bottom: 0; }
+  .meal-label {
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .meal-select {
+    width: 100%;
+    min-height: var(--tap);
+    border: 1.5px solid var(--line);
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    background: #fff;
+    color: var(--ink);
+    appearance: auto;
+    -webkit-appearance: menulist;
+  }
+  .meal-select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .badge {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: #f0eee9;
+    color: var(--muted);
+  }
+  .badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 6px;
+  }
+  .badge.nausea { background: var(--ok-soft); color: var(--ok); }
+  .badge.light { background: var(--accent-soft); color: var(--accent); }
+  .badge.base { background: #f3f0ea; color: #7a705f; }
+  .badge.stage-zao { background: #fceef1; color: #b85c6a; }
+  .badge.stage-zhong { background: var(--accent-soft); color: var(--accent); }
+  .badge.stage-wan { background: #efe8ff; color: #6b4ea0; }
+  .stage-toggle {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin: 0 0 12px;
+  }
+  .stage-toggle .label {
+    font-size: 0.82rem;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .stage-toggle .chip { min-height: 40px; padding: 6px 12px; font-size: 0.84rem; }
+  .actions-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .btn {
+    min-height: var(--tap);
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: #fff;
+    padding: 10px 12px;
+    font-size: 0.92rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .btn.fill {
+    flex: 1;
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .btn.clear-all {
+    flex: 1;
+    background: #fff;
+    color: var(--rose);
+    border-color: #e8c4cb;
+  }
   .note { font-size: 0.82rem; color: var(--muted); }
-  .warn { background: #fff8e8; border: 1px solid #f0d9a0; border-radius: 12px; padding: 10px 12px; font-size: 0.88rem; margin-bottom: 12px; }
-  .sticky {
-    position: fixed; left: 0; right: 0; bottom: 0; padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
-    background: rgba(247,244,238,.96); border-top: 1px solid var(--line); display: flex; gap: 8px;
+  .empty { color: var(--muted); padding: 12px 0; text-align: center; }
+  .menu-item {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
   }
-  .sticky button { flex: 1; padding: 12px; border-radius: 12px; border: none; font-weight: 700; font-size: 0.95rem; cursor: pointer; }
+  .menu-item:last-child { border-bottom: none; }
+  .menu-item .top {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .menu-item .mname { font-weight: 700; }
+  .menu-item .meal-tag {
+    flex-shrink: 0;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .shop-group { margin-bottom: 14px; }
+  .shop-group h3 {
+    margin: 0 0 8px;
+    font-size: 0.88rem;
+    color: var(--accent);
+  }
+  .shop-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--line);
+    font-size: 0.92rem;
+  }
+  .shop-row .cnt {
+    font-weight: 700;
+    color: var(--accent);
+    min-width: 2.2em;
+    text-align: right;
+  }
+  .chosen-list { font-size: 0.86rem; color: var(--muted); }
+  .chosen-list div { padding: 3px 0; }
+  .sticky {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+    background: rgba(246,242,235,.96);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid var(--line);
+    display: flex;
+    gap: 8px;
+    z-index: 20;
+  }
+  .sticky button {
+    flex: 1;
+    min-height: var(--tap);
+    padding: 12px;
+    border-radius: 12px;
+    border: none;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+  }
   .sticky .a { background: var(--accent); color: #fff; }
-  .sticky .b { background: #fff; border: 1px solid var(--line) !important; }
-  .empty { color: var(--muted); padding: 8px 0; }
-  .day-title { font-weight: 700; margin: 4px 0 0; }
+  .sticky .b { background: #fff; border: 1px solid var(--line) !important; color: var(--ink); }
+  .notes-group { margin-bottom: 16px; }
+  .notes-group h3 {
+    margin: 0 0 8px;
+    font-size: 0.92rem;
+    color: var(--accent);
+  }
+  .notes-row {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .notes-row:last-child { border-bottom: none; }
+  .notes-row .nname { font-weight: 700; font-size: 0.95rem; }
+  .notes-row .nmeta {
+    margin-top: 4px;
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.75rem;
+    margin-top: 8px;
+    padding-bottom: 4px;
+  }
+  .disclaimer {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 8px;
+    line-height: 1.4;
+  }
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(88px + env(safe-area-inset-bottom));
+    transform: translateX(-50%);
+    background: rgba(28,26,23,.88);
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-size: 0.86rem;
+    z-index: 50;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s;
+    max-width: 86vw;
+    text-align: center;
+  }
+  .toast.show { opacity: 1; }
 </style>
 </head>
 <body>
   <h1>孕期自选食谱</h1>
-  <div class="sub">选未来 1–5 天的早午晚 → 自动出采购清单 · 数据只存在你手机里</div>
-  <div class="warn">一般参考：食物要全熟；不喝酒；巴旦木可少量，苦杏仁不要吃。不适或医嘱冲突时听医生。</div>
+  <p class="sub">午晚自主搭配主食/荤/素 · 采购自动合并（含每日牛奶燕麦蛋）</p>
+  <div class="gestation" id="gestation">计算孕周中…</div>
+  <details class="tips" id="stage-tips">
+    <summary>
+      <span class="tips-summary-main">孕期饮食小提示 <span class="tips-chevron" aria-hidden="true">▾</span></span>
+      <span class="tips-hint">点击展开</span>
+    </summary>
+    <div class="tips-body">
+      <p class="tips-stage" id="tips-stage">加载中…</p>
+      <p class="tips-h">少碰 / 避免</p>
+      <ul>
+        <li>酒精（全程避免）；吸烟同避</li>
+        <li>生/半生鱼肉蛋：生鱼片、刺身、溏心蛋、未煮透肉禽</li>
+        <li>未巴氏杀菌奶及软芝士（如布里、卡门培尔、蓝纹等）</li>
+        <li>高汞鱼：鲨鱼、旗鱼、方头鱼等；金枪鱼宜限量</li>
+        <li>生芽菜；未洗净的果蔬</li>
+        <li>肝类不宜过量（维生素 A 偏高）</li>
+        <li>加工肉（火腿、香肠等）少吃，吃则充分加热</li>
+        <li>咖啡因适量：常见建议约每日 ≤200mg（约 1～2 杯咖啡量级，含茶/巧克力）</li>
+      </ul>
+      <p class="tips-h">鼓励</p>
+      <ul>
+        <li>蛋白全熟：蛋、肉、禽、鱼虾煮透</li>
+        <li>多样蔬果、全谷；奶制品或其它钙来源</li>
+        <li>足量饮水；孕吐期可少食多餐、清淡温热</li>
+      </ul>
+      <p class="tips-h">每日优先营养</p>
+      <ul>
+        <li>叶酸：绿叶菜/豆类等；补充剂剂量听医嘱（孕前起尤重要）</li>
+        <li>铁：红肉、深色蔬、豆类；是否另补听医嘱</li>
+        <li>钙：奶/酸奶等；需要量随孕周增加，剂量听医嘱</li>
+        <li>蛋白质：蛋、鱼虾、瘦肉、豆制品，保证每日足量</li>
+        <li>DHA/优质脂肪：低汞深海鱼、坚果适量；是否另补听医嘱</li>
+        <li>碘：烹调用碘盐；甲状腺问题务必遵医嘱</li>
+        <li>维生素D：适量日照与食物；是否另补听医嘱</li>
+        <li>水分纤维：多喝水、蔬果全谷，减轻便秘</li>
+      </ul>
+      <p class="tips-attr">参考西尔斯怀孕百科等常见孕期饮食建议 · 剂量听医嘱 · 非医疗建议，个体遵医嘱</p>
+    </div>
+  </details>
+  <div class="stage-toggle" id="stage-toggle" aria-label="菜品显示范围"></div>
 
-  <div class="tabs" id="tabs">
-    <button class="tab on" data-tab="plan">选餐</button>
-    <button class="tab" data-tab="menu">菜品库</button>
-    <button class="tab" data-tab="shop">采购清单</button>
+  <div class="tabs" id="tabs" role="tablist">
+    <button type="button" class="tab on" data-tab="plan" role="tab">选餐</button>
+    <button type="button" class="tab" data-tab="menu" role="tab">菜品库</button>
+    <button type="button" class="tab" data-tab="notes" role="tab">备注</button>
+    <button type="button" class="tab" data-tab="shop" role="tab">采购清单</button>
   </div>
 
+  <div class="day-jump" id="day-jump" hidden></div>
+  <div id="day-jump-spacer" aria-hidden="true"></div>
   <div id="view-plan"></div>
   <div id="view-menu" hidden></div>
+  <div id="view-notes" hidden></div>
   <div id="view-shop" hidden></div>
 
+  <p class="footer">v1.7.2 · 2026-11-01 · 非医疗建议，仅供日常参考</p>
+
   <div class="sticky">
-    <button class="b" id="btnCopy">复制采购清单</button>
-    <button class="a" id="btnSave">保存到本机</button>
+    <button type="button" class="b" id="btnCopy">复制采购清单</button>
+    <button type="button" class="a" id="btnSave">保存到本机</button>
   </div>
+  <div class="toast" id="toast"></div>
 
 <script>
-const DISHES = [
-  {meal:"早", name:"小米粥+煮蛋+菠菜", ings:["小米","鸡蛋","菠菜"], note:"清淡"},
-  {meal:"早", name:"燕麦牛奶粥+水煮蛋", ings:["燕麦","巴氏牛奶","鸡蛋"], note:""},
-  {meal:"早", name:"南瓜粥+全麦面包", ings:["南瓜","米","全麦面包"], note:""},
-  {meal:"早", name:"蒸蛋羹+烤面包+牛奶", ings:["鸡蛋","全麦面包","巴氏牛奶"], note:"孕吐友好"},
-  {meal:"早", name:"白粥+咸蛋+凉拌豆干", ings:["大米","咸鸭蛋","豆干"], note:"保底"},
-  {meal:"早", name:"豆浆(熟)+包子(热透)", ings:["豆浆","包子"], note:"外购需热透"},
-  {meal:"早", name:"红薯+煮蛋+酸奶", ings:["红薯","鸡蛋","原味酸奶"], note:""},
-  {meal:"早", name:"青菜瘦肉粥", ings:["大米","瘦猪肉","青菜"], note:""},
-  {meal:"午", name:"清蒸鲈鱼+米饭+西兰花", ings:["鲈鱼","大米","西兰花","姜"], note:"鱼全熟"},
-  {meal:"午", name:"番茄炒蛋+米饭+炒青菜", ings:["鸡蛋","番茄","大米","青菜"], note:"家常"},
-  {meal:"午", name:"香菇鸡丝+杂粮饭+黄瓜", ings:["鸡胸肉","香菇","杂粮米","黄瓜"], note:""},
-  {meal:"午", name:"土豆炖牛腩+米饭+青菜", ings:["牛腩","土豆","胡萝卜","大米","青菜"], note:"煮软烂"},
-  {meal:"午", name:"豆腐鱼汤+米饭+豆芽", ings:["豆腐","鱼片","大米","豆芽"], note:""},
-  {meal:"午", name:"清蒸虾+菜心+米饭", ings:["虾","菜心","大米"], note:"虾全熟"},
-  {meal:"午", name:"番茄鸡蛋面", ings:["面条","鸡蛋","番茄"], note:"易消化"},
-  {meal:"午", name:"鸡胸杂粮饭+焯菜", ings:["鸡胸肉","杂粮米","青菜","玉米"], note:""},
-  {meal:"午", name:"排骨山药汤+米饭", ings:["排骨","山药","大米"], note:""},
-  {meal:"午", name:"素炒时蔬+蒸蛋+米饭", ings:["绿叶菜","鸡蛋","大米","豆腐"], note:"少油"},
-  {meal:"晚", name:"南瓜小米粥+蒸蛋羹", ings:["南瓜","小米","鸡蛋"], note:"清淡"},
-  {meal:"晚", name:"青菜肉丝面", ings:["面条","瘦猪肉","青菜"], note:""},
-  {meal:"晚", name:"海鲜粥+焯菜", ings:["大米","虾仁","鱼片","青菜"], note:"全熟"},
-  {meal:"晚", name:"馄饨+紫菜蛋花汤", ings:["馄饨","紫菜","鸡蛋"], note:"煮透"},
-  {meal:"晚", name:"饺子+蛋花汤", ings:["饺子","鸡蛋"], note:"煮透"},
-  {meal:"晚", name:"番茄鸡蛋面(晚)", ings:["面条","番茄","鸡蛋"], note:"保底"},
-  {meal:"晚", name:"皮蛋瘦肉粥+拌豆腐", ings:["大米","瘦肉","皮蛋","豆腐"], note:"皮蛋适量"},
-  {meal:"晚", name:"山药排骨汤面", ings:["面条","排骨","山药"], note:""},
-  {meal:"晚", name:"清蒸鸡+菠菜+小米粥", ings:["鸡","菠菜","小米"], note:""},
-  {meal:"晚", name:"白粥+蒸蛋+焯菜", ings:["大米","鸡蛋","青菜"], note:"保底"},
-  {meal:"加餐", name:"原味酸奶", ings:["原味酸奶"], note:""},
-  {meal:"加餐", name:"香蕉", ings:["香蕉"], note:""},
-  {meal:"加餐", name:"苹果", ings:["苹果"], note:""},
-  {meal:"加餐", name:"梨", ings:["梨"], note:""},
-  {meal:"加餐", name:"橙子", ings:["橙子"], note:"适量"},
-  {meal:"加餐", name:"猕猴桃", ings:["猕猴桃"], note:""},
-  {meal:"加餐", name:"苏打饼干", ings:["苏打饼干"], note:"孕吐"},
-  {meal:"加餐", name:"巴旦木几粒", ings:["巴旦木"], note:"非苦杏仁"},
-  {meal:"加餐", name:"核桃几粒", ings:["核桃"], note:""},
-  {meal:"加餐", name:"烤面包干", ings:["全麦面包"], note:"孕吐"},
-];
-const NONE = "（不选）";
-const KEY = "preg_meal_plan_v1";
+(function () {
+  "use strict";
 
-function loadState() {
-  try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return { days: 3, plans: Array.from({length:5}, () => ({b:NONE,l:NONE,d:NONE,s:NONE})) };
-    return JSON.parse(raw);
-  } catch (e) {
-    return { days: 3, plans: Array.from({length:5}, () => ({b:NONE,l:NONE,d:NONE,s:NONE})) };
+  const LMP = "2026-09-27";
+  const NONE = "";
+  const DEFAULT_STAPLE = "白米饭"; // lunch/dinner 主食 default when empty
+  const KEY = "preg_meal_plan_v1_7";
+  const KEY_OLD = "preg_meal_plan_v1_5";
+  const KEY_OLDER = "preg_meal_plan_v1_4";
+  const KEY_V14 = "preg_meal_plan_v1_3";
+  const KEY_V12 = "preg_meal_plan_v1_2";
+  const KEY_OLDEST = "preg_meal_plan_v1";
+
+  // Silent fixed breakfast supply — no UI, still merged into shopping each planned day
+  const FIXED_BREAKFAST = {
+    label: "牛奶+燕麦+鸡蛋",
+    ings: ["巴氏牛奶", "燕麦", "鸡蛋"]
+  };
+
+  // Slot defs for selectable meals (lunch/dinner only)
+  const LUNCH_SLOTS = [
+    { key: "ls", role: "主食", label: "主食" },
+    { key: "lp", role: "荤", label: "荤菜/蛋白" },
+    { key: "lv", role: "素", label: "素菜" }
+  ];
+  const DINNER_SLOTS = [
+    { key: "ds", role: "主食", label: "主食" },
+    { key: "dp", role: "荤", label: "荤菜/蛋白" },
+    { key: "dv", role: "素", label: "素菜" }
+  ];
+  const ALL_SLOTS = LUNCH_SLOTS.concat(DINNER_SLOTS);
+  const ROLE_ORDER = ["主食", "荤", "素"];
+
+  // Component dish library — roles: 主食 / 荤 / 素 · v1.7 家常下饭向
+  const DISHES = [
+    // —— 主食（白米饭默认；少量清淡保底 + 下饭炒饭/面/包）
+    { role: "主食", name: "白米饭", ings: ["大米"], note: "默认主食", nausea: true, stages: ["早","中","晚"] },
+    { role: "主食", name: "蛋炒饭(蛋全熟)", ings: ["大米", "鸡蛋", "葱"], note: "蛋全熟·少油", nausea: false, stages: ["早","中","晚"] },
+    { role: "主食", name: "酱油炒饭", ings: ["大米", "生抽", "葱"], note: "下饭·少油", nausea: false, stages: ["早","中","晚"] },
+    { role: "主食", name: "葱油拌面", ings: ["面条", "葱", "生抽"], note: "家常", nausea: false, stages: ["早","中","晚"] },
+    { role: "主食", name: "打卤面", ings: ["面条", "瘦猪肉", "木耳", "蛋皮"], note: "卤汁浇面·肉全熟", nausea: false, stages: ["中","晚"] },
+    { role: "主食", name: "焖面", ings: ["面条", "猪肉丝", "豆角"], note: "软烂易嚼", nausea: false, stages: ["中","晚"] },
+    { role: "主食", name: "土豆泥拌饭", ings: ["土豆", "大米", "黄油"], note: "软糯下饭", nausea: true, stages: ["早","中","晚"] },
+    { role: "主食", name: "南瓜饭", ings: ["南瓜", "大米"], note: "微甜软烂", nausea: true, stages: ["早","中","晚"] },
+    { role: "主食", name: "咖喱饭底", ings: ["大米", "咖喱块", "土豆", "胡萝卜"], note: "微辣可减酱", nausea: false, stages: ["中","晚"] },
+    { role: "主食", name: "炒河粉", ings: ["河粉", "豆芽", "瘦猪肉"], note: "锅气·肉全熟", nausea: false, stages: ["中","晚"] },
+    { role: "主食", name: "意面番茄肉酱底", ings: ["意面", "番茄", "瘦猪肉"], note: "可简化·肉全熟", nausea: false, stages: ["中","晚"] },
+    { role: "主食", name: "小笼包(蒸透)", ings: ["小笼包"], note: "蒸透全熟", nausea: false, stages: ["中","晚"] },
+    { role: "主食", name: "包子(蒸透)", ings: ["包子"], note: "蒸透", nausea: false, stages: ["早","中","晚"] },
+    { role: "主食", name: "小米粥", ings: ["小米"], note: "清淡·孕吐友好", nausea: true, stages: ["早","中","晚"] },
+    { role: "主食", name: "清汤面", ings: ["面条"], note: "清淡易消化", nausea: true, stages: ["早","中","晚"] },
+    { role: "主食", name: "杂粮饭", ings: ["杂粮米"], note: "膳食纤维", nausea: false, stages: ["中","晚"] },
+
+    // —— 荤/蛋白（全熟下饭；早孕偏清淡少辣，中晚更全）
+    { role: "荤", name: "番茄炒蛋", ings: ["鸡蛋", "番茄"], note: "家常·孕吐友好", nausea: true, stages: ["早","中","晚"] },
+    { role: "荤", name: "香菇滑鸡", ings: ["鸡腿肉", "香菇"], note: "滑嫩全熟", nausea: false, stages: ["早","中","晚"] },
+    { role: "荤", name: "土豆炖鸡", ings: ["鸡腿", "土豆", "胡萝卜"], note: "软烂下饭", nausea: false, stages: ["早","中","晚"] },
+    { role: "荤", name: "清蒸鲈鱼", ings: ["鲈鱼", "姜", "葱"], note: "鱼全熟", nausea: false, stages: ["早","中","晚"] },
+    { role: "荤", name: "洋葱炒肉", ings: ["洋葱", "瘦猪肉"], note: "家常少油", nausea: false, stages: ["早","中","晚"] },
+    { role: "荤", name: "锅塌豆腐", ings: ["豆腐", "鸡蛋"], note: "外软里嫩·蛋全熟", nausea: true, stages: ["早","中","晚"] },
+    { role: "荤", name: "家常豆腐", ings: ["豆腐", "瘦猪肉"], note: "少油下饭", nausea: true, stages: ["早","中","晚"] },
+    { role: "荤", name: "红烧鸡翅", ings: ["鸡翅", "生抽", "姜"], note: "酱香全熟", nausea: false, stages: ["中","晚"] },
+    { role: "荤", name: "可乐鸡翅(少糖)", ings: ["鸡翅", "无糖可乐", "姜"], note: "少糖·全熟", nausea: false, stages: ["中","晚"] },
+    { role: "荤", name: "蒜香排骨", ings: ["排骨", "蒜", "生抽"], note: "烤箱或红烧·全熟", nausea: false, stages: ["中","晚"] },
+    { role: "荤", name: "豉汁蒸排骨", ings: ["排骨", "豆豉", "蒜"], note: "蒸透", nausea: false, stages: ["中","晚"] },
+    { role: "荤", name: "糖醋里脊", ings: ["瘦猪肉", "番茄酱", "淀粉"], note: "酸甜·可少油煎", nausea: false, stages: ["中","晚"] },
+    { role: "荤", name: "鱼香肉丝", ings: ["瘦猪肉", "木耳", "胡萝卜", "笋"], note: "微酸甜不辣可", nausea: false, stages: ["中","晚"] },
+    { role: "荤", name: "宫保鸡丁(微辣可选)", ings: ["鸡腿肉", "花生", "干辣椒"], note: "微辣可去辣椒", nausea: false, stages: ["中","晚"] },
+    { role: "荤", name: "番茄牛腩", ings: ["牛腩", "番茄", "土豆"], note: "炖软烂", nausea: false, stages: ["中","晚"] },
+    { role: "荤", name: "照烧鸡腿", ings: ["鸡腿", "照烧汁", "姜"], note: "烤或煎·全熟", nausea: false, stages: ["中","晚"] },
+    { role: "荤", name: "蒜蓉粉丝蒸虾", ings: ["虾", "粉丝", "蒜"], note: "虾全熟", nausea: false, stages: ["中","晚"] },
+    { role: "荤", name: "虾仁滑蛋", ings: ["虾仁", "鸡蛋"], note: "蛋全熟·虾全熟", nausea: false, stages: ["中","晚"] },
+    { role: "荤", name: "麻婆豆腐(微辣)", ings: ["豆腐", "牛肉末", "豆瓣酱"], note: "微辣可减豆瓣", nausea: false, stages: ["中","晚"] },
+    { role: "荤", name: "小炒黄牛肉", ings: ["黄牛肉", "青椒", "洋葱"], note: "快炒全熟", nausea: false, stages: ["中","晚"] },
+    { role: "荤", name: "京酱肉丝", ings: ["瘦猪肉", "甜面酱", "葱"], note: "配黄瓜丝可", nausea: false, stages: ["中","晚"] },
+    { role: "荤", name: "蚝油牛肉", ings: ["瘦牛肉", "蚝油", "洋葱"], note: "滑炒全熟", nausea: false, stages: ["中","晚"] },
+    { role: "荤", name: "咖喱鸡块", ings: ["鸡腿", "咖喱块", "土豆", "胡萝卜"], note: "微辣可减酱", nausea: false, stages: ["中","晚"] },
+    { role: "荤", name: "青椒肉丝", ings: ["青椒", "瘦猪肉"], note: "家常", nausea: false, stages: ["中","晚"] },
+
+    // —— 素（少清炒白水菜；下饭家常素菜为主）
+    { role: "素", name: "蒜蓉西兰花", ings: ["西兰花", "蒜"], note: "少油", nausea: true, stages: ["早","中","晚"] },
+    { role: "素", name: "醋溜白菜", ings: ["大白菜", "醋", "干辣椒"], note: "酸爽·早孕可去辣椒", nausea: true, stages: ["早","中","晚"] },
+    { role: "素", name: "香菇油菜", ings: ["油菜", "香菇"], note: "家常", nausea: true, stages: ["早","中","晚"] },
+    { role: "素", name: "手撕包菜", ings: ["包菜", "蒜", "干辣椒"], note: "微辣可去辣椒", nausea: false, stages: ["早","中","晚"] },
+    { role: "素", name: "清炒荷兰豆", ings: ["荷兰豆", "蒜"], note: "脆嫩少油", nausea: true, stages: ["早","中","晚"] },
+    { role: "素", name: "胡萝卜炒木耳", ings: ["胡萝卜", "木耳"], note: "清爽", nausea: true, stages: ["早","中","晚"] },
+    { role: "素", name: "蒜蓉油麦菜", ings: ["油麦菜", "蒜"], note: "清淡保底之一", nausea: true, stages: ["早","中","晚"] },
+    { role: "素", name: "清炒青菜", ings: ["青菜"], note: "保底", nausea: true, stages: ["早","中","晚"] },
+    { role: "素", name: "清炒南瓜", ings: ["南瓜"], note: "软甜·孕吐友好", nausea: true, stages: ["早","中","晚"] },
+    { role: "素", name: "地三鲜", ings: ["茄子", "土豆", "青椒"], note: "少油版可", nausea: false, stages: ["中","晚"] },
+    { role: "素", name: "干煸四季豆", ings: ["四季豆", "蒜"], note: "豆角煸透", nausea: false, stages: ["中","晚"] },
+    { role: "素", name: "虎皮青椒", ings: ["青椒", "蒜", "生抽"], note: "微辣可", nausea: false, stages: ["中","晚"] },
+    { role: "素", name: "蚝油杏鲍菇", ings: ["杏鲍菇", "蚝油"], note: "下饭", nausea: false, stages: ["中","晚"] },
+    { role: "素", name: "烤茄子", ings: ["茄子", "蒜", "生抽"], note: "优于凉拌皮蛋", nausea: false, stages: ["中","晚"] },
+    { role: "素", name: "蒜泥茄子", ings: ["茄子", "蒜"], note: "蒸或烤后拌", nausea: false, stages: ["中","晚"] },
+    { role: "素", name: "酸辣土豆丝", ings: ["土豆", "醋", "干辣椒"], note: "微辣可去辣椒", nausea: false, stages: ["中","晚"] },
+    { role: "素", name: "玉米烙", ings: ["玉米粒", "鸡蛋", "淀粉"], note: "外脆里嫩·蛋全熟", nausea: false, stages: ["中","晚"] },
+    { role: "素", name: "蚝油生菜", ings: ["生菜", "蚝油"], note: "快炒", nausea: false, stages: ["中","晚"] },
+    { role: "素", name: "蒜蓉空心菜", ings: ["空心菜", "蒜"], note: "", nausea: false, stages: ["中","晚"] },
+    { role: "素", name: "清炒豆芽", ings: ["豆芽", "蒜"], note: "少油", nausea: true, stages: ["中","晚"] },
+    { role: "素", name: "凉拌黄瓜", ings: ["黄瓜", "蒜"], note: "清爽开胃", nausea: true, stages: ["中","晚"] },
+
+  ];
+
+  const ING_GROUPS = {
+    "主食": ["大米", "杂粮米", "小米", "燕麦", "面条", "河粉", "意面", "全麦面包", "全麦馒头", "馄饨", "饺子", "小笼包", "包子", "红薯", "紫薯", "玉米", "玉米面", "玉米粒", "苏打饼干", "南瓜", "土豆", "淀粉", "黄油", "咖喱块"],
+    "蛋白": ["鸡蛋", "蛋皮", "瘦猪肉", "猪肉丝", "牛肉末", "瘦牛肉", "黄牛肉", "牛腩", "排骨", "鸡胸肉", "鸡腿", "鸡腿肉", "鸡翅", "鲈鱼", "鳕鱼", "鱼片", "虾", "虾仁", "豆腐", "豆干", "豆浆", "巴氏牛奶", "原味酸奶", "花生"],
+    "蔬菜": ["菠菜", "青菜", "绿叶菜", "西兰花", "菜心", "黄瓜", "番茄", "胡萝卜", "豆芽", "香菇", "杏鲍菇", "木耳", "山药", "冬瓜", "芹菜", "莴笋", "生菜", "油麦菜", "油菜", "空心菜", "青椒", "包菜", "大白菜", "茄子", "四季豆", "豆角", "荷兰豆", "洋葱", "笋", "丝瓜", "紫菜", "粉丝", "姜", "蒜", "葱", "干辣椒"],
+    "水果奶蛋": ["香蕉", "苹果", "梨", "橙子", "猕猴桃", "葡萄干", "巴旦木", "核桃"],
+    "调味": ["生抽", "蚝油", "豆豉", "豆瓣酱", "甜面酱", "番茄酱", "照烧汁", "醋", "无糖可乐"]
+  };
+
+  function emptyPlan() {
+    const o = {};
+    ALL_SLOTS.forEach(s => { o[s.key] = NONE; });
+    o.ls = DEFAULT_STAPLE;
+    o.ds = DEFAULT_STAPLE;
+    return o;
   }
-}
-let state = loadState();
 
-function saveState() {
-  localStorage.setItem(KEY, JSON.stringify(state));
-}
-
-function dishes(meal) {
-  return DISHES.filter(d => d.meal === meal);
-}
-
-function selectHtml(meal, value, dayIdx, field) {
-  const opts = [`<option value="${NONE}">${NONE}</option>`]
-    .concat(dishes(meal).map(d => `<option value="${d.name}" ${d.name===value?"selected":""}>${d.name}${d.note?" · "+d.note:""}</option>`));
-  return `<label>${meal==="早"?"早餐":meal==="午"?"午餐":meal==="晚"?"晚餐":"加餐"}</label>
-    <select data-day="${dayIdx}" data-field="${field}">${opts.join("")}</select>`;
-}
-
-function renderPlan() {
-  const el = document.getElementById("view-plan");
-  let chips = "";
-  for (let i=1;i<=5;i++) {
-    chips += `<button type="button" class="chip ${state.days===i?"on":""}" data-days="${i}">${i}天</button>`;
+  function defaultState() {
+    return { days: 3, plans: Array.from({ length: 5 }, emptyPlan), showAll: false };
   }
-  let body = `<div class="card"><h2>选几天</h2><div class="chiprow">${chips}</div>
-    <p class="note">点选即可；选择会保存在这台手机浏览器里。</p></div>`;
-  for (let i=0;i<state.days;i++) {
-    const p = state.plans[i];
-    body += `<div class="card"><div class="day-title">第${i+1}天</div>
-      ${selectHtml("早", p.b, i, "b")}
-      ${selectHtml("午", p.l, i, "l")}
-      ${selectHtml("晚", p.d, i, "d")}
-      ${selectHtml("加餐", p.s, i, "s")}
-    </div>`;
-  }
-  el.innerHTML = body;
-  el.querySelectorAll("[data-days]").forEach(btn => btn.onclick = () => {
-    state.days = Number(btn.getAttribute("data-days"));
-    saveState(); renderPlan();
-  });
-  el.querySelectorAll("select").forEach(sel => {
-    sel.onchange = () => {
-      const i = Number(sel.getAttribute("data-day"));
-      const f = sel.getAttribute("data-field");
-      state.plans[i][f] = sel.value;
-      saveState();
-    };
-  });
-}
 
-function renderMenu() {
-  const el = document.getElementById("view-menu");
-  let filter = "全部";
-  function draw() {
-    const list = filter==="全部" ? DISHES : DISHES.filter(d => d.meal===filter);
-    const rows = list.map(d => `<tr><td>${d.meal}</td><td>${d.name}<div class="note">${d.note||""}</div></td><td>${d.ings.join("、")}</td></tr>`).join("");
-    el.innerHTML = `<div class="card"><h2>菜品库</h2>
-      <div class="chiprow">
-        ${["全部","早","午","晚","加餐"].map(x=>`<button type="button" class="chip ${filter===x?"on":""}" data-f="${x}">${x}</button>`).join("")}
-      </div>
-      <table><thead><tr><th>餐次</th><th>菜名</th><th>食材</th></tr></thead><tbody>${rows}</tbody></table>
-    </div>`;
-    el.querySelectorAll("[data-f]").forEach(b => b.onclick = () => { filter=b.getAttribute("data-f"); draw(); });
+  function dishByName(name) {
+    if (!name) return null;
+    return DISHES.find(d => d.name === name) || null;
   }
-  draw();
-}
 
-function shopList() {
-  const count = {};
-  const chosen = [];
-  for (let i=0;i<state.days;i++) {
-    const p = state.plans[i];
-    ["b","l","d","s"].forEach(k => {
-      if (p[k] && p[k] !== NONE) {
-        chosen.push(`第${i+1}天: ${p[k]}`);
-        const dish = DISHES.find(d => d.name === p[k]);
-        if (dish) dish.ings.forEach(ing => { count[ing] = (count[ing]||0)+1; });
+  function dishesOfRole(role, stageFilter) {
+    let list = DISHES.filter(d => d.role === role);
+    if (stageFilter) list = list.filter(d => dishInStage(d, stageFilter));
+    return list;
+  }
+
+  function dishInStage(d, stageCode) {
+    const st = d.stages || [];
+    return st.indexOf(stageCode) !== -1;
+  }
+
+  function normalizeState(raw) {
+    const base = defaultState();
+    if (!raw || typeof raw !== "object") return base;
+    const days = Math.min(5, Math.max(1, Number(raw.days) || 3));
+    const plans = Array.from({ length: 5 }, (_, i) => {
+      const p = (raw.plans && raw.plans[i]) || {};
+      const out = emptyPlan();
+      ALL_SLOTS.forEach(({ key }) => {
+        let v = p[key];
+        if (v === "（不选）" || v == null) v = NONE;
+        // Keep saved dish if still in library; else leave emptyPlan default
+        // (主食 ls/ds default 白米饭; other slots stay empty)
+        if (typeof v === "string" && v && dishByName(v)) out[key] = v;
+      });
+      return out;
+    });
+    const showAll = !!raw.showAll;
+    return { days, plans, showAll };
+  }
+
+  // Migrate from v1_4 / v1_3: keep days + lunch/dinner slots
+  function migrateFromV14(raw) {
+    return normalizeState(raw);
+  }
+
+  // Best-effort migrate from v1_2 / v1 combo plans — lunch/dinner left empty
+  function migrateFromV12(raw) {
+    const base = defaultState();
+    if (!raw || typeof raw !== "object") return base;
+    const days = Math.min(5, Math.max(1, Number(raw.days) || 3));
+    return { days, plans: Array.from({ length: 5 }, emptyPlan), showAll: false };
+  }
+
+  function loadState() {
+    try {
+      let raw = localStorage.getItem(KEY);
+      if (raw) return normalizeState(JSON.parse(raw));
+      const old = localStorage.getItem(KEY_OLD);
+      if (old) {
+        const migrated = migrateFromV14(JSON.parse(old));
+        localStorage.setItem(KEY, JSON.stringify(migrated));
+        return migrated;
       }
+      const older = localStorage.getItem(KEY_OLDER);
+      if (older) {
+        const migrated = migrateFromV14(JSON.parse(older));
+        localStorage.setItem(KEY, JSON.stringify(migrated));
+        return migrated;
+      }
+      const v14 = localStorage.getItem(KEY_V14);
+      if (v14) {
+        const migrated = migrateFromV14(JSON.parse(v14));
+        localStorage.setItem(KEY, JSON.stringify(migrated));
+        return migrated;
+      }
+      const v12 = localStorage.getItem(KEY_V12);
+      if (v12) {
+        const migrated = migrateFromV12(JSON.parse(v12));
+        localStorage.setItem(KEY, JSON.stringify(migrated));
+        return migrated;
+      }
+      const oldest = localStorage.getItem(KEY_OLDEST);
+      if (oldest) {
+        const migrated = migrateFromV12(JSON.parse(oldest));
+        localStorage.setItem(KEY, JSON.stringify(migrated));
+        return migrated;
+      }
+    } catch (e) { /* ignore */ }
+    return defaultState();
+  }
+
+  let state = loadState();
+
+  function saveState() {
+    try {
+      localStorage.setItem(KEY, JSON.stringify(state));
+    } catch (e) { /* ignore */ }
+  }
+
+  function toast(msg) {
+    const el = document.getElementById("toast");
+    el.textContent = msg;
+    el.classList.add("show");
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => el.classList.remove("show"), 1800);
+  }
+
+  function parseYMD(s) {
+    const [y, m, d] = s.split("-").map(Number);
+    return new Date(y, m - 1, d);
+  }
+
+  function startOfDay(d) {
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  }
+
+  const STAGE_META = {
+    "早": {
+      code: "早",
+      label: "孕早期",
+      stageLine: "孕早期：清淡全熟、缓解孕吐优先；少食多餐；全程不饮酒；不适听医嘱。"
+    },
+    "中": {
+      code: "中",
+      label: "孕中期",
+      stageLine: "孕中期：均衡增加蛋白/铁/钙；继续全熟与多样蔬果；全程不饮酒；不适听医嘱。"
+    },
+    "晚": {
+      code: "晚",
+      label: "孕晚期",
+      stageLine: "孕晚期：保证蛋白与钙铁；少油腻少胀气；继续全熟；有妊娠糖尿病另遵医嘱。"
+    }
+  };
+
+  function gestationInfo() {
+    const lmp = startOfDay(parseYMD(LMP));
+    const today = startOfDay(new Date());
+    let diff = Math.floor((today - lmp) / 86400000);
+    if (diff < 0) diff = 0;
+    const weeks = Math.floor(diff / 7);
+    const days = diff % 7;
+    const month = Math.max(1, Math.floor(diff / 28) + 1);
+    // Chinese obstetric: early <13w, mid <28w, late ≥28w
+    let stageCode = "晚";
+    if (weeks < 13) stageCode = "早";
+    else if (weeks < 28) stageCode = "中";
+    return { weeks, days, month, stageCode, stage: STAGE_META[stageCode] };
+  }
+
+  let CURRENT_STAGE = gestationInfo().stageCode;
+
+  function activeStageFilter() {
+    // null = show all; else stage code 早/中/晚
+    return state.showAll ? null : CURRENT_STAGE;
+  }
+
+  function renderGestation() {
+    const g = gestationInfo();
+    CURRENT_STAGE = g.stageCode;
+    document.getElementById("gestation").textContent =
+      "孕" + g.weeks + "周" + g.days + "天 · 妊娠第" + g.month + "月 · " + g.stage.label;
+    const tipStage = document.getElementById("tips-stage");
+    if (tipStage) {
+      tipStage.textContent = g.stage.stageLine;
+    }
+    renderStageToggle();
+  }
+
+  function renderStageToggle() {
+    const el = document.getElementById("stage-toggle");
+    if (!el) return;
+    const cur = !state.showAll;
+    el.innerHTML =
+      '<span class="label">显示：</span>' +
+      '<button type="button" class="chip' + (cur ? " on" : "") + '" data-scope="current">当前孕期</button>' +
+      '<button type="button" class="chip' + (!cur ? " on" : "") + '" data-scope="all">全部</button>';
+    el.querySelectorAll("[data-scope]").forEach(btn => {
+      btn.onclick = () => {
+        state.showAll = btn.getAttribute("data-scope") === "all";
+        saveState();
+        renderStageToggle();
+        // Refresh active views that depend on filter
+        const planView = document.getElementById("view-plan");
+        const menuView = document.getElementById("view-menu");
+        const notesView = document.getElementById("view-notes");
+        if (planView && !planView.hidden) renderPlan();
+        if (menuView && !menuView.hidden) renderMenu();
+        if (notesView && !notesView.hidden) renderNotes();
+      };
     });
   }
-  const ings = Object.keys(count).sort((a,b)=>a.localeCompare(b,"zh"));
-  return { chosen, ings, count };
-}
 
-function renderShop() {
-  const el = document.getElementById("view-shop");
-  const { chosen, ings, count } = shopList();
-  if (!ings.length) {
-    el.innerHTML = `<div class="card"><h2>采购清单</h2><div class="empty">先在「选餐」里选几道菜。</div></div>`;
-    return;
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
   }
-  el.innerHTML = `<div class="card"><h2>采购清单（已合并）</h2>
-    <table><thead><tr><th>食材</th><th>次数</th></tr></thead>
-    <tbody>${ings.map(i=>`<tr><td>${i}</td><td>${count[i]}</td></tr>`).join("")}</tbody></table>
-    </div>
-    <div class="card"><h2>已选菜</h2>
-      <div class="note">${chosen.map(c=>`<div>${c}</div>`).join("")}</div>
-    </div>`;
-}
 
-function showTab(name) {
-  ["plan","menu","shop"].forEach(t => {
-    document.getElementById("view-"+t).hidden = t!==name;
-  });
-  document.querySelectorAll(".tab").forEach(btn => {
-    btn.classList.toggle("on", btn.getAttribute("data-tab")===name);
-  });
-  if (name==="plan") renderPlan();
-  if (name==="menu") renderMenu();
-  if (name==="shop") renderShop();
-}
-
-document.getElementById("tabs").onclick = (e) => {
-  const btn = e.target.closest(".tab");
-  if (!btn) return;
-  showTab(btn.getAttribute("data-tab"));
-};
-
-document.getElementById("btnSave").onclick = () => {
-  saveState();
-  alert("已保存到本机浏览器。下次用同一手机浏览器打开还能看到。");
-};
-
-document.getElementById("btnCopy").onclick = async () => {
-  const { chosen, ings, count } = shopList();
-  if (!ings.length) { alert("还没有选择菜品"); return; }
-  const text = ["【孕期采购清单】", ...ings.map(i => `- ${i} ×${count[i]}`), "", "【已选】", ...chosen].join("
-");
-  try {
-    await navigator.clipboard.writeText(text);
-    alert("采购清单已复制，可粘贴到微信。");
-  } catch (e) {
-    prompt("复制下面内容：", text);
+  function optionLabel(d) {
+    // Selects show dish name only — notes live on the 备注 tab
+    return d.name;
   }
-};
 
-showTab("plan");
+  function roleSelect(role, selected, dayIdx, field) {
+    const stageF = activeStageFilter();
+    let list = dishesOfRole(role, stageF);
+    // Keep previously saved off-stage selection visible so saves don't break
+    if (selected) {
+      const has = list.some(d => d.name === selected);
+      if (!has) {
+        const kept = dishByName(selected);
+        if (kept && kept.role === role) list = [kept].concat(list);
+      }
+    }
+    const id = "meal-" + dayIdx + "-" + field;
+    let html =
+      '<select class="meal-select" id="' + id + '" data-day="' + dayIdx + '" data-field="' + field + '">' +
+      '<option value="">（不选）</option>';
+    list.forEach(d => {
+      const sel = selected === d.name ? " selected" : "";
+      html +=
+        '<option value="' + escapeHtml(d.name) + '"' + sel + ">" +
+        escapeHtml(optionLabel(d)) +
+        "</option>";
+    });
+    html += "</select>";
+    return html;
+  }
+
+  function slotsBlock(title, slots, plan, dayIdx) {
+    let html = '<div class="meal-block"><div class="meal-block-title">' + title + "</div>";
+    slots.forEach(({ key, role, label }) => {
+      html +=
+        '<div class="slot-row">' +
+        '<label class="meal-label" for="meal-' + dayIdx + "-" + key + '">' + label + "</label>" +
+        roleSelect(role, plan[key] || NONE, dayIdx, key) +
+        "</div>";
+    });
+    html += "</div>";
+    return html;
+  }
+
+  function renderPlan() {
+    const el = document.getElementById("view-plan");
+    let chips = "";
+    for (let i = 1; i <= 5; i++) {
+      chips += '<button type="button" class="chip' + (state.days === i ? " on" : "") +
+        '" data-days="' + i + '">' + i + "天</button>";
+    }
+    let body =
+      '<div class="card"><h2>选几天</h2><div class="chiprow">' + chips + "</div>" +
+      '<p class="note" style="margin:10px 0 0">午晚分别选主食/荤/素；下拉里只显示菜名。清淡/孕吐友好等说明见「备注」页。采购清单仍自动计入每天牛奶+燕麦+鸡蛋。数据只存本机。</p>' +
+      '<div class="actions-row" style="margin-top:12px">' +
+      '<button type="button" class="btn fill" id="btnAutoFill">一键填满</button>' +
+      '<button type="button" class="btn clear-all" id="btnClearAll">清空选择</button>' +
+      "</div></div>";
+
+    for (let i = 0; i < state.days; i++) {
+      const p = state.plans[i];
+      body += '<div class="card" data-day-card="' + i + '" id="day-card-' + i + '"><div class="day-head"><div class="day-title">第' +
+        (i + 1) + "天</div></div>";
+      body += slotsBlock("午餐 · 自主搭配", LUNCH_SLOTS, p, i);
+      body += slotsBlock("晚餐 · 自主搭配", DINNER_SLOTS, p, i);
+      body += "</div>";
+    }
+    body += '<p class="disclaimer">本工具仅作家庭备餐参考，不替代营养师或医生建议。</p>';
+    el.innerHTML = body;
+
+    rebuildDayJump();
+
+    el.querySelectorAll("[data-days]").forEach(btn => {
+      btn.onclick = () => {
+        const n = Number(btn.getAttribute("data-days"));
+        // New/extra day cards: empty 主食 -> 白米饭 (do not overwrite a chosen 主食)
+        for (let i = 0; i < n; i++) {
+          if (!state.plans[i].ls) state.plans[i].ls = DEFAULT_STAPLE;
+          if (!state.plans[i].ds) state.plans[i].ds = DEFAULT_STAPLE;
+        }
+        state.days = n;
+        saveState();
+        renderPlan();
+      };
+    });
+
+    el.querySelectorAll(".meal-select").forEach(sel => {
+      sel.onchange = () => {
+        const i = Number(sel.getAttribute("data-day"));
+        const f = sel.getAttribute("data-field");
+        state.plans[i][f] = sel.value || NONE;
+        saveState();
+      };
+    });
+
+    document.getElementById("btnAutoFill").onclick = autoFill;
+    document.getElementById("btnClearAll").onclick = clearAll;
+  }
+
+  let dayJumpObserver = null;
+
+  function syncStickyOffsets() {
+    const root = document.documentElement;
+    const tabs = document.getElementById("tabs");
+    const bar = document.getElementById("day-jump");
+    const spacer = document.getElementById("day-jump-spacer");
+    const plan = document.getElementById("view-plan");
+
+    // Clear leftover filter/plan paddings that can stack with the sticky bar
+    if (plan) {
+      plan.style.paddingTop = "";
+      plan.style.marginTop = "";
+    }
+    const stageToggle = document.getElementById("stage-toggle");
+    if (stageToggle) stageToggle.style.paddingTop = "";
+    if (spacer) {
+      spacer.style.height = "0px";
+      spacer.style.marginBottom = "0px";
+    }
+
+    const tabsH = tabs ? Math.ceil(tabs.getBoundingClientRect().height) : 56;
+    root.style.setProperty("--tabs-h", tabsH + "px");
+
+    const jumpVisible = !!(bar && !bar.hidden);
+    if (!jumpVisible) {
+      root.style.setProperty("--jump-h", "0px");
+      root.style.setProperty("--sticky-stack-h", (tabsH + 8) + "px");
+      root.style.scrollPaddingTop = "calc(env(safe-area-inset-top) + " + (tabsH + 8) + "px)";
+      return;
+    }
+
+    const jumpH = Math.max(1, Math.ceil(bar.getBoundingClientRect().height));
+    root.style.setProperty("--jump-h", jumpH + "px");
+    // stack = tabs + day-jump (+ small gap) — used as scroll clearance under sticky bars
+    const stack = tabsH + jumpH + 10;
+    root.style.setProperty("--sticky-stack-h", stack + "px");
+    root.style.scrollPaddingTop = "calc(env(safe-area-inset-top) + " + stack + "px)";
+
+    if (plan) {
+      plan.querySelectorAll(".card, [data-day-card]").forEach(card => {
+        card.style.scrollMarginTop = "calc(env(safe-area-inset-top) + " + stack + "px)";
+      });
+    }
+  }
+
+  function rebuildDayJump() {
+    const bar = document.getElementById("day-jump");
+    if (!bar) return;
+    let html = "";
+    for (let i = 0; i < state.days; i++) {
+      html += '<button type="button" class="day-jump-btn' + (i === 0 ? " on" : "") +
+        '" data-jump-day="' + i + '">第' + (i + 1) + "天</button>";
+    }
+    bar.innerHTML = '<div class="day-jump-inner">' + html + "</div>";
+    bar.hidden = false;
+    // Keep jump row pinned left (no page-level overflow-x:hidden)
+    const inner = bar.querySelector(".day-jump-inner");
+    if (inner) inner.scrollLeft = 0;
+
+    // Layout after buttons exist (height depends on day-count / wrap)
+    syncStickyOffsets();
+    requestAnimationFrame(syncStickyOffsets);
+
+    bar.querySelectorAll("[data-jump-day]").forEach(btn => {
+      btn.onclick = () => {
+        const i = Number(btn.getAttribute("data-jump-day"));
+        const card = document.getElementById("day-card-" + i);
+        if (!card) return;
+        syncStickyOffsets();
+        bar.querySelectorAll(".day-jump-btn").forEach(b => {
+          b.classList.toggle("on", Number(b.getAttribute("data-jump-day")) === i);
+        });
+        // Vertical-only scroll: avoid scrollIntoView horizontal nudge from sticky/overflow
+        const marginTop = parseFloat(getComputedStyle(card).scrollMarginTop) ||
+          parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--sticky-stack-h")) || 120;
+        const y = card.getBoundingClientRect().top + window.pageYOffset - marginTop;
+        window.scrollTo({ top: Math.max(0, y), left: 0, behavior: "smooth" });
+        // Pin page scrollLeft + day-jump inner without overflow-x:hidden on html/body
+        const innerRow = bar.querySelector(".day-jump-inner");
+        const t0 = performance.now();
+        (function pinX() {
+          if (window.scrollX || document.documentElement.scrollLeft || document.body.scrollLeft) {
+            window.scrollTo(0, window.scrollY);
+            document.documentElement.scrollLeft = 0;
+            document.body.scrollLeft = 0;
+          }
+          if (innerRow && innerRow.scrollLeft) innerRow.scrollLeft = 0;
+          if (performance.now() - t0 < 900) requestAnimationFrame(pinX);
+        })();
+      };
+    });
+
+    if (dayJumpObserver) {
+      dayJumpObserver.disconnect();
+      dayJumpObserver = null;
+    }
+    const cards = document.querySelectorAll("[data-day-card]");
+    if (!cards.length || !("IntersectionObserver" in window)) return;
+
+    const tabsH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--tabs-h")) || 56;
+    const jumpH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--jump-h")) || 60;
+    const topCut = Math.max(12, Math.round(tabsH + jumpH));
+
+    dayJumpObserver = new IntersectionObserver((entries) => {
+      let best = null;
+      let bestTop = Infinity;
+      entries.forEach(en => {
+        if (!en.isIntersecting) return;
+        const top = Math.abs(en.boundingClientRect.top);
+        if (top < bestTop) {
+          bestTop = top;
+          best = en.target;
+        }
+      });
+      if (!best) return;
+      const idx = Number(best.getAttribute("data-day-card"));
+      bar.querySelectorAll(".day-jump-btn").forEach(b => {
+        b.classList.toggle("on", Number(b.getAttribute("data-jump-day")) === idx);
+      });
+    }, {
+      root: null,
+      rootMargin: "-" + topCut + "px 0px -55% 0px",
+      threshold: [0, 0.25, 0.5, 1]
+    });
+    cards.forEach(c => dayJumpObserver.observe(c));
+  }
+
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  // Fill empty slots; 主食 -> 白米饭; avoid same 荤 across adjacent days when possible
+  function autoFill() {
+    const proteinKeys = ["lp", "dp"]; // lunch/dinner 荤 slots
+    const stapleKeys = ["ls", "ds"]; // lunch/dinner 主食
+
+    // Empty 主食 always 白米饭 (dropdown still lists all staples; user can change)
+    for (let i = 0; i < state.days; i++) {
+      stapleKeys.forEach(k => {
+        if (!state.plans[i][k]) state.plans[i][k] = DEFAULT_STAPLE;
+      });
+    }
+
+    ALL_SLOTS.forEach(({ key, role }) => {
+      if (role === "主食") return; // already handled
+      const pool = shuffle(dishesOfRole(role, activeStageFilter()).map(d => d.name));
+      if (!pool.length) return;
+      let cursor = 0;
+      for (let i = 0; i < state.days; i++) {
+        if (state.plans[i][key]) continue;
+
+        // For 荤: also avoid matching adjacent day's other 荤 slots
+        const avoided = new Set();
+        if (proteinKeys.indexOf(key) !== -1) {
+          if (i > 0) {
+            proteinKeys.forEach(k => { if (state.plans[i - 1][k]) avoided.add(state.plans[i - 1][k]); });
+          }
+          if (i < state.days - 1) {
+            proteinKeys.forEach(k => { if (state.plans[i + 1][k]) avoided.add(state.plans[i + 1][k]); });
+          }
+          // also avoid same-day other protein slot if already filled
+          proteinKeys.forEach(k => {
+            if (k !== key && state.plans[i][k]) avoided.add(state.plans[i][k]);
+          });
+        } else {
+          const prev = i > 0 ? state.plans[i - 1][key] : null;
+          const next = i < state.days - 1 ? state.plans[i + 1][key] : null;
+          if (prev) avoided.add(prev);
+          if (next) avoided.add(next);
+        }
+
+        let pick = null;
+        for (let tries = 0; tries < pool.length; tries++) {
+          const cand = pool[(cursor + tries) % pool.length];
+          if (!avoided.has(cand)) {
+            pick = cand;
+            cursor = (cursor + tries + 1) % pool.length;
+            break;
+          }
+        }
+        if (!pick) {
+          pick = pool[cursor % pool.length];
+          cursor++;
+        }
+        state.plans[i][key] = pick;
+      }
+    });
+    saveState();
+    renderPlan();
+    toast("已填满空位（主食默认白米饭；荤尽量错开相邻天）");
+  }
+
+  function clearAll() {
+    for (let i = 0; i < 5; i++) state.plans[i] = emptyPlan();
+    saveState();
+    renderPlan();
+    toast("已清空选择");
+  }
+
+  function renderMenu() {
+    const el = document.getElementById("view-menu");
+    let filter = el._filter || "全部";
+    function draw() {
+      el._filter = filter;
+      const stageF = activeStageFilter();
+      let base = stageF ? DISHES.filter(d => dishInStage(d, stageF)) : DISHES;
+      const list = filter === "全部" ? base : base.filter(d => d.role === filter);
+      const items = list.map(d => {
+        return (
+          '<div class="menu-item"><div class="top">' +
+          '<div class="mname">' + escapeHtml(d.name) + "</div>" +
+          '<span class="meal-tag">' + d.role + "</span></div></div>"
+        );
+      }).join("");
+      const scopeNote = stageF
+        ? ("默认显示" + STAGE_META[stageF].label + "推荐；可顶部切换「全部」。")
+        : "当前显示全部孕期菜品。";
+      el.innerHTML =
+        '<div class="card"><h2>菜品库（' + list.length + "）</h2>" +
+        '<p class="note" style="margin:0 0 10px">' + scopeNote + " 只列菜名；清淡/孕吐友好/适用孕期等见「备注」。</p>" +
+        '<div class="chiprow">' +
+        ["全部"].concat(ROLE_ORDER).map(x =>
+          '<button type="button" class="chip' + (filter === x ? " on" : "") +
+          '" data-f="' + x + '">' + x + "</button>"
+        ).join("") +
+        "</div>" +
+        (items || '<div class="empty">暂无</div>') +
+        "</div>" +
+        '<p class="disclaimer">库内共 ' + DISHES.length + " 个组件（" +
+        ROLE_ORDER.map(r => r + " " + dishesOfRole(r, null).length).join(" / ") +
+        "）；当前筛选 " + list.length + " 个。</p>";
+      el.querySelectorAll("[data-f]").forEach(b => {
+        b.onclick = () => { filter = b.getAttribute("data-f"); draw(); };
+      });
+    }
+    draw();
+  }
+
+  function groupOf(ing) {
+    for (const g of Object.keys(ING_GROUPS)) {
+      if (ING_GROUPS[g].indexOf(ing) !== -1) return g;
+    }
+    return "其它";
+  }
+
+
+  function dishNotesMeta(d) {
+    const bits = [];
+    const note = (d.note || "").trim();
+    if (note) bits.push(note.replace(/·/g, "、"));
+    if (d.nausea && !/孕吐/.test(note)) bits.push("孕吐友好");
+    const stages = (d.stages || []).join("/");
+    if (stages) bits.push("适用：" + stages);
+    return bits.length ? bits.join("；") : "（无特别说明）";
+  }
+
+  function renderNotes() {
+    const el = document.getElementById("view-notes");
+    const roleLabels = { "主食": "主食", "荤": "荤菜/蛋白", "素": "素菜" };
+    const stageF = activeStageFilter();
+    const scopeLine = stageF
+      ? ("当前顶部筛选为「" + STAGE_META[stageF].label + "」：选餐下拉默认只列该期菜；本页仍列出全部菜品及其适用孕期。")
+      : "当前顶部筛选为「全部」：选餐下拉与本页均覆盖全部菜品。";
+    let body =
+      '<div class="card"><h2>备注</h2>' +
+      '<p class="note" style="margin:0 0 10px">选餐下拉里只显示菜名。本页集中列出清淡、家常、孕吐友好、全熟/煮透、适用孕期等说明。</p>' +
+      '<p class="note" style="margin:0">' + escapeHtml(scopeLine) + "</p></div>";
+    ROLE_ORDER.forEach(role => {
+      const list = dishesOfRole(role, null);
+      body += '<div class="card notes-group"><h3>' + roleLabels[role] + "（" + list.length + "）</h3>";
+      list.forEach(d => {
+        body +=
+          '<div class="notes-row"><div class="nname">' + escapeHtml(d.name) +
+          '</div><div class="nmeta">' + escapeHtml(dishNotesMeta(d)) +
+          "</div></div>";
+      });
+      body += "</div>";
+    });
+    body += '<p class="disclaimer">口味与禁忌因人而异；非医疗建议。</p>';
+    el.innerHTML = body;
+  }
+
+  function shopList() {
+    const count = {};
+    const chosen = [];
+
+    function addIng(ing) {
+      count[ing] = (count[ing] || 0) + 1;
+    }
+
+    for (let i = 0; i < state.days; i++) {
+      const p = state.plans[i];
+      // Silent fixed breakfast supply every selected day (no meal UI)
+      chosen.push("第" + (i + 1) + "天 早餐：" + FIXED_BREAKFAST.label + "（默认）");
+      FIXED_BREAKFAST.ings.forEach(addIng);
+
+      // Lunch components
+      const lunchParts = [];
+      LUNCH_SLOTS.forEach(({ key, label }) => {
+        if (p[key]) {
+          lunchParts.push(p[key]);
+          const dish = dishByName(p[key]);
+          if (dish) dish.ings.forEach(addIng);
+        }
+      });
+      if (lunchParts.length) chosen.push("第" + (i + 1) + "天 午餐：" + lunchParts.join(" + "));
+
+      // Dinner components
+      const dinnerParts = [];
+      DINNER_SLOTS.forEach(({ key }) => {
+        if (p[key]) {
+          dinnerParts.push(p[key]);
+          const dish = dishByName(p[key]);
+          if (dish) dish.ings.forEach(addIng);
+        }
+      });
+      if (dinnerParts.length) chosen.push("第" + (i + 1) + "天 晚餐：" + dinnerParts.join(" + "));
+
+    }
+
+    const groups = { "主食": [], "蛋白": [], "蔬菜": [], "水果奶蛋": [], "调味": [], "其它": [] };
+    Object.keys(count).sort((a, b) => a.localeCompare(b, "zh")).forEach(ing => {
+      groups[groupOf(ing)].push(ing);
+    });
+    return { chosen, count, groups };
+  }
+
+  function renderShop() {
+    const el = document.getElementById("view-shop");
+    const { chosen, count, groups } = shopList();
+    const total = Object.keys(count).length;
+    // Always have breakfast ings if days >= 1, so total should rarely be 0
+    if (!total) {
+      el.innerHTML = '<div class="card"><h2>采购清单</h2><div class="empty">先在「选餐」里选天数。</div></div>';
+      return;
+    }
+    let body = '<div class="card"><h2>采购清单（已合并 · ' + total + " 项）</h2>";
+    body += '<p class="note" style="margin:0 0 10px">已含每天默认早餐原料：' + FIXED_BREAKFAST.label + "</p>";
+    ["主食", "蛋白", "蔬菜", "水果奶蛋", "调味", "其它"].forEach(g => {
+      if (!groups[g].length) return;
+      body += '<div class="shop-group"><h3>' + g + "</h3>";
+      groups[g].forEach(ing => {
+        body += '<div class="shop-row"><span>' + escapeHtml(ing) +
+          '</span><span class="cnt">×' + count[ing] + "</span></div>";
+      });
+      body += "</div>";
+    });
+    body += "</div>";
+    body +=
+      '<div class="card"><h2>已选搭配</h2><div class="chosen-list">' +
+      chosen.map(c => "<div>" + escapeHtml(c) + "</div>").join("") +
+      "</div></div>";
+    body += '<p class="disclaimer">次数≈出现天数合计，采购时按家用量酌情增减。</p>';
+    el.innerHTML = body;
+  }
+
+  function showTab(name) {
+    ["plan", "menu", "notes", "shop"].forEach(t => {
+      document.getElementById("view-" + t).hidden = t !== name;
+    });
+    document.querySelectorAll(".tab").forEach(btn => {
+      btn.classList.toggle("on", btn.getAttribute("data-tab") === name);
+    });
+    const jump = document.getElementById("day-jump");
+    if (name === "plan") {
+      renderPlan();
+    } else {
+      if (jump) jump.hidden = true;
+      syncStickyOffsets();
+      if (name === "menu") renderMenu();
+      if (name === "notes") renderNotes();
+      if (name === "shop") renderShop();
+    }
+  }
+
+  function buildCopyText() {
+    const { chosen, count, groups } = shopList();
+    const lines = ["【孕期采购清单】", "（合并次数，按需增减）", "默认早餐原料：" + FIXED_BREAKFAST.label, ""];
+    ["主食", "蛋白", "蔬菜", "水果奶蛋", "调味", "其它"].forEach(g => {
+      if (!groups[g].length) return;
+      lines.push("· " + g);
+      groups[g].forEach(ing => lines.push("- " + ing + " ×" + count[ing]));
+      lines.push("");
+    });
+    lines.push("【已选搭配】");
+    chosen.forEach(c => lines.push(c));
+    lines.push("", "— 孕期自选食谱 v1.7");
+    return lines.join("\n");
+  }
+
+  document.getElementById("tabs").onclick = function (e) {
+    const btn = e.target.closest(".tab");
+    if (!btn) return;
+    showTab(btn.getAttribute("data-tab"));
+  };
+
+  document.getElementById("btnSave").onclick = function () {
+    saveState();
+    toast("已保存到本机浏览器");
+  };
+
+  document.getElementById("btnCopy").onclick = async function () {
+    const { count } = shopList();
+    if (!Object.keys(count).length) {
+      toast("还没有选择菜品");
+      return;
+    }
+    const text = buildCopyText();
+    try {
+      await navigator.clipboard.writeText(text);
+      toast("已复制，可粘贴到微信");
+    } catch (e) {
+      prompt("复制下面内容到微信：", text);
+    }
+  };
+
+  let resizeTimer = null;
+  window.addEventListener("resize", function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(syncStickyOffsets, 100);
+  });
+
+  // Guard against horizontal page drift without overflow-x:hidden on sticky ancestors
+  window.addEventListener("scroll", function () {
+    if (window.scrollX || document.documentElement.scrollLeft || document.body.scrollLeft) {
+      window.scrollTo(0, window.scrollY);
+      document.documentElement.scrollLeft = 0;
+      document.body.scrollLeft = 0;
+    }
+  }, { passive: true });
+
+  renderGestation();
+  showTab("plan");
+})();
 </script>
 </body>
 </html>
