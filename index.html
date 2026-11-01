@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<title>孕期自选食谱</title>
+<style>
+  :root {
+    --bg: #f7f4ee;
+    --card: #fff;
+    --ink: #1a1a1a;
+    --muted: #666;
+    --line: #e6e0d4;
+    --accent: #1e5bb8;
+    --gold: #c9a84c;
+    --ok: #2f6b3a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: var(--bg); color: var(--ink); line-height: 1.45;
+    padding: 16px 14px 88px;
+  }
+  h1 { font-size: 1.35rem; margin: 0 0 4px; }
+  .sub { color: var(--muted); font-size: 0.85rem; margin-bottom: 14px; }
+  .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .tab {
+    border: 1px solid var(--line); background: var(--card); border-radius: 999px;
+    padding: 8px 14px; font-size: 0.92rem; cursor: pointer;
+  }
+  .tab.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(0,0,0,.04);
+  }
+  .card h2 { font-size: 1.05rem; margin: 0 0 10px; }
+  label { display: block; font-size: 0.8rem; color: var(--muted); margin: 8px 0 4px; }
+  select, button.primary {
+    width: 100%; font-size: 1rem; padding: 10px 12px; border-radius: 10px;
+    border: 1px solid var(--line); background: #fff;
+  }
+  button.primary {
+    background: var(--accent); color: #fff; border: none; font-weight: 700;
+    margin-top: 10px; cursor: pointer;
+  }
+  button.ghost {
+    background: transparent; border: 1px solid var(--line); border-radius: 10px;
+    padding: 8px 12px; margin: 4px 4px 0 0; cursor: pointer; font-size: 0.9rem;
+  }
+  .chiprow { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .chip { border-radius: 999px; border: 1px solid var(--line); padding: 6px 10px; font-size: 0.85rem; background: #fff; cursor: pointer; }
+  .chip.on { background: #e8f0ff; border-color: var(--accent); color: var(--accent); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.78rem; }
+  .note { font-size: 0.82rem; color: var(--muted); }
+  .warn { background: #fff8e8; border: 1px solid #f0d9a0; border-radius: 12px; padding: 10px 12px; font-size: 0.88rem; margin-bottom: 12px; }
+  .sticky {
+    position: fixed; left: 0; right: 0; bottom: 0; padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+    background: rgba(247,244,238,.96); border-top: 1px solid var(--line); display: flex; gap: 8px;
+  }
+  .sticky button { flex: 1; padding: 12px; border-radius: 12px; border: none; font-weight: 700; font-size: 0.95rem; cursor: pointer; }
+  .sticky .a { background: var(--accent); color: #fff; }
+  .sticky .b { background: #fff; border: 1px solid var(--line) !important; }
+  .empty { color: var(--muted); padding: 8px 0; }
+  .day-title { font-weight: 700; margin: 4px 0 0; }
+</style>
+</head>
+<body>
+  <h1>孕期自选食谱</h1>
+  <div class="sub">选未来 1–5 天的早午晚 → 自动出采购清单 · 数据只存在你手机里</div>
+  <div class="warn">一般参考：食物要全熟；不喝酒；巴旦木可少量，苦杏仁不要吃。不适或医嘱冲突时听医生。</div>
+
+  <div class="tabs" id="tabs">
+    <button class="tab on" data-tab="plan">选餐</button>
+    <button class="tab" data-tab="menu">菜品库</button>
+    <button class="tab" data-tab="shop">采购清单</button>
+  </div>
+
+  <div id="view-plan"></div>
+  <div id="view-menu" hidden></div>
+  <div id="view-shop" hidden></div>
+
+  <div class="sticky">
+    <button class="b" id="btnCopy">复制采购清单</button>
+    <button class="a" id="btnSave">保存到本机</button>
+  </div>
+
+<script>
+const DISHES = [
+  {meal:"早", name:"小米粥+煮蛋+菠菜", ings:["小米","鸡蛋","菠菜"], note:"清淡"},
+  {meal:"早", name:"燕麦牛奶粥+水煮蛋", ings:["燕麦","巴氏牛奶","鸡蛋"], note:""},
+  {meal:"早", name:"南瓜粥+全麦面包", ings:["南瓜","米","全麦面包"], note:""},
+  {meal:"早", name:"蒸蛋羹+烤面包+牛奶", ings:["鸡蛋","全麦面包","巴氏牛奶"], note:"孕吐友好"},
+  {meal:"早", name:"白粥+咸蛋+凉拌豆干", ings:["大米","咸鸭蛋","豆干"], note:"保底"},
+  {meal:"早", name:"豆浆(熟)+包子(热透)", ings:["豆浆","包子"], note:"外购需热透"},
+  {meal:"早", name:"红薯+煮蛋+酸奶", ings:["红薯","鸡蛋","原味酸奶"], note:""},
+  {meal:"早", name:"青菜瘦肉粥", ings:["大米","瘦猪肉","青菜"], note:""},
+  {meal:"午", name:"清蒸鲈鱼+米饭+西兰花", ings:["鲈鱼","大米","西兰花","姜"], note:"鱼全熟"},
+  {meal:"午", name:"番茄炒蛋+米饭+炒青菜", ings:["鸡蛋","番茄","大米","青菜"], note:"家常"},
+  {meal:"午", name:"香菇鸡丝+杂粮饭+黄瓜", ings:["鸡胸肉","香菇","杂粮米","黄瓜"], note:""},
+  {meal:"午", name:"土豆炖牛腩+米饭+青菜", ings:["牛腩","土豆","胡萝卜","大米","青菜"], note:"煮软烂"},
+  {meal:"午", name:"豆腐鱼汤+米饭+豆芽", ings:["豆腐","鱼片","大米","豆芽"], note:""},
+  {meal:"午", name:"清蒸虾+菜心+米饭", ings:["虾","菜心","大米"], note:"虾全熟"},
+  {meal:"午", name:"番茄鸡蛋面", ings:["面条","鸡蛋","番茄"], note:"易消化"},
+  {meal:"午", name:"鸡胸杂粮饭+焯菜", ings:["鸡胸肉","杂粮米","青菜","玉米"], note:""},
+  {meal:"午", name:"排骨山药汤+米饭", ings:["排骨","山药","大米"], note:""},
+  {meal:"午", name:"素炒时蔬+蒸蛋+米饭", ings:["绿叶菜","鸡蛋","大米","豆腐"], note:"少油"},
+  {meal:"晚", name:"南瓜小米粥+蒸蛋羹", ings:["南瓜","小米","鸡蛋"], note:"清淡"},
+  {meal:"晚", name:"青菜肉丝面", ings:["面条","瘦猪肉","青菜"], note:""},
+  {meal:"晚", name:"海鲜粥+焯菜", ings:["大米","虾仁","鱼片","青菜"], note:"全熟"},
+  {meal:"晚", name:"馄饨+紫菜蛋花汤", ings:["馄饨","紫菜","鸡蛋"], note:"煮透"},
+  {meal:"晚", name:"饺子+蛋花汤", ings:["饺子","鸡蛋"], note:"煮透"},
+  {meal:"晚", name:"番茄鸡蛋面(晚)", ings:["面条","番茄","鸡蛋"], note:"保底"},
+  {meal:"晚", name:"皮蛋瘦肉粥+拌豆腐", ings:["大米","瘦肉","皮蛋","豆腐"], note:"皮蛋适量"},
+  {meal:"晚", name:"山药排骨汤面", ings:["面条","排骨","山药"], note:""},
+  {meal:"晚", name:"清蒸鸡+菠菜+小米粥", ings:["鸡","菠菜","小米"], note:""},
+  {meal:"晚", name:"白粥+蒸蛋+焯菜", ings:["大米","鸡蛋","青菜"], note:"保底"},
+  {meal:"加餐", name:"原味酸奶", ings:["原味酸奶"], note:""},
+  {meal:"加餐", name:"香蕉", ings:["香蕉"], note:""},
+  {meal:"加餐", name:"苹果", ings:["苹果"], note:""},
+  {meal:"加餐", name:"梨", ings:["梨"], note:""},
+  {meal:"加餐", name:"橙子", ings:["橙子"], note:"适量"},
+  {meal:"加餐", name:"猕猴桃", ings:["猕猴桃"], note:""},
+  {meal:"加餐", name:"苏打饼干", ings:["苏打饼干"], note:"孕吐"},
+  {meal:"加餐", name:"巴旦木几粒", ings:["巴旦木"], note:"非苦杏仁"},
+  {meal:"加餐", name:"核桃几粒", ings:["核桃"], note:""},
+  {meal:"加餐", name:"烤面包干", ings:["全麦面包"], note:"孕吐"},
+];
+const NONE = "（不选）";
+const KEY = "preg_meal_plan_v1";
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return { days: 3, plans: Array.from({length:5}, () => ({b:NONE,l:NONE,d:NONE,s:NONE})) };
+    return JSON.parse(raw);
+  } catch (e) {
+    return { days: 3, plans: Array.from({length:5}, () => ({b:NONE,l:NONE,d:NONE,s:NONE})) };
+  }
+}
+let state = loadState();
+
+function saveState() {
+  localStorage.setItem(KEY, JSON.stringify(state));
+}
+
+function dishes(meal) {
+  return DISHES.filter(d => d.meal === meal);
+}
+
+function selectHtml(meal, value, dayIdx, field) {
+  const opts = [`<option value="${NONE}">${NONE}</option>`]
+    .concat(dishes(meal).map(d => `<option value="${d.name}" ${d.name===value?"selected":""}>${d.name}${d.note?" · "+d.note:""}</option>`));
+  return `<label>${meal==="早"?"早餐":meal==="午"?"午餐":meal==="晚"?"晚餐":"加餐"}</label>
+    <select data-day="${dayIdx}" data-field="${field}">${opts.join("")}</select>`;
+}
+
+function renderPlan() {
+  const el = document.getElementById("view-plan");
+  let chips = "";
+  for (let i=1;i<=5;i++) {
+    chips += `<button type="button" class="chip ${state.days===i?"on":""}" data-days="${i}">${i}天</button>`;
+  }
+  let body = `<div class="card"><h2>选几天</h2><div class="chiprow">${chips}</div>
+    <p class="note">点选即可；选择会保存在这台手机浏览器里。</p></div>`;
+  for (let i=0;i<state.days;i++) {
+    const p = state.plans[i];
+    body += `<div class="card"><div class="day-title">第${i+1}天</div>
+      ${selectHtml("早", p.b, i, "b")}
+      ${selectHtml("午", p.l, i, "l")}
+      ${selectHtml("晚", p.d, i, "d")}
+      ${selectHtml("加餐", p.s, i, "s")}
+    </div>`;
+  }
+  el.innerHTML = body;
+  el.querySelectorAll("[data-days]").forEach(btn => btn.onclick = () => {
+    state.days = Number(btn.getAttribute("data-days"));
+    saveState(); renderPlan();
+  });
+  el.querySelectorAll("select").forEach(sel => {
+    sel.onchange = () => {
+      const i = Number(sel.getAttribute("data-day"));
+      const f = sel.getAttribute("data-field");
+      state.plans[i][f] = sel.value;
+      saveState();
+    };
+  });
+}
+
+function renderMenu() {
+  const el = document.getElementById("view-menu");
+  let filter = "全部";
+  function draw() {
+    const list = filter==="全部" ? DISHES : DISHES.filter(d => d.meal===filter);
+    const rows = list.map(d => `<tr><td>${d.meal}</td><td>${d.name}<div class="note">${d.note||""}</div></td><td>${d.ings.join("、")}</td></tr>`).join("");
+    el.innerHTML = `<div class="card"><h2>菜品库</h2>
+      <div class="chiprow">
+        ${["全部","早","午","晚","加餐"].map(x=>`<button type="button" class="chip ${filter===x?"on":""}" data-f="${x}">${x}</button>`).join("")}
+      </div>
+      <table><thead><tr><th>餐次</th><th>菜名</th><th>食材</th></tr></thead><tbody>${rows}</tbody></table>
+    </div>`;
+    el.querySelectorAll("[data-f]").forEach(b => b.onclick = () => { filter=b.getAttribute("data-f"); draw(); });
+  }
+  draw();
+}
+
+function shopList() {
+  const count = {};
+  const chosen = [];
+  for (let i=0;i<state.days;i++) {
+    const p = state.plans[i];
+    ["b","l","d","s"].forEach(k => {
+      if (p[k] && p[k] !== NONE) {
+        chosen.push(`第${i+1}天: ${p[k]}`);
+        const dish = DISHES.find(d => d.name === p[k]);
+        if (dish) dish.ings.forEach(ing => { count[ing] = (count[ing]||0)+1; });
+      }
+    });
+  }
+  const ings = Object.keys(count).sort((a,b)=>a.localeCompare(b,"zh"));
+  return { chosen, ings, count };
+}
+
+function renderShop() {
+  const el = document.getElementById("view-shop");
+  const { chosen, ings, count } = shopList();
+  if (!ings.length) {
+    el.innerHTML = `<div class="card"><h2>采购清单</h2><div class="empty">先在「选餐」里选几道菜。</div></div>`;
+    return;
+  }
+  el.innerHTML = `<div class="card"><h2>采购清单（已合并）</h2>
+    <table><thead><tr><th>食材</th><th>次数</th></tr></thead>
+    <tbody>${ings.map(i=>`<tr><td>${i}</td><td>${count[i]}</td></tr>`).join("")}</tbody></table>
+    </div>
+    <div class="card"><h2>已选菜</h2>
+      <div class="note">${chosen.map(c=>`<div>${c}</div>`).join("")}</div>
+    </div>`;
+}
+
+function showTab(name) {
+  ["plan","menu","shop"].forEach(t => {
+    document.getElementById("view-"+t).hidden = t!==name;
+  });
+  document.querySelectorAll(".tab").forEach(btn => {
+    btn.classList.toggle("on", btn.getAttribute("data-tab")===name);
+  });
+  if (name==="plan") renderPlan();
+  if (name==="menu") renderMenu();
+  if (name==="shop") renderShop();
+}
+
+document.getElementById("tabs").onclick = (e) => {
+  const btn = e.target.closest(".tab");
+  if (!btn) return;
+  showTab(btn.getAttribute("data-tab"));
+};
+
+document.getElementById("btnSave").onclick = () => {
+  saveState();
+  alert("已保存到本机浏览器。下次用同一手机浏览器打开还能看到。");
+};
+
+document.getElementById("btnCopy").onclick = async () => {
+  const { chosen, ings, count } = shopList();
+  if (!ings.length) { alert("还没有选择菜品"); return; }
+  const text = ["【孕期采购清单】", ...ings.map(i => `- ${i} ×${count[i]}`), "", "【已选】", ...chosen].join("
+");
+  try {
+    await navigator.clipboard.writeText(text);
+    alert("采购清单已复制，可粘贴到微信。");
+  } catch (e) {
+    prompt("复制下面内容：", text);
+  }
+};
+
+showTab("plan");
+</script>
+</body>
+</html>
